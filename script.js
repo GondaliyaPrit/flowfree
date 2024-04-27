@@ -163,11 +163,7 @@ class Game {
     removeIntersectingLine() {
         console.log("removeIntersectingLine");
         console.log("currentline length"+currentLinePoints.length);
-        if (this.currentLinePoints.length < 2)
-        {
-            console.log("removeIntersectingLine return");
-            return;
-        } 
+        if (this.currentLinePoints.length < 2) return;
 
         const newLine = {
             start: this.currentLinePoints[this.currentLinePoints.length - 2],
