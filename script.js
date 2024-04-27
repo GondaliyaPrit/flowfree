@@ -392,4 +392,4 @@ isColorFarFromOthers(r, g, b) {
 
 }
 
-const game = new Game('gameCanvas', 15, ['#FF0000', '#00FF00', '#0000FF'], 50);
+const game = new Game('gameCanvas', 15, ['#FF0000', '#00FF00', '#0000FF'], 10);
