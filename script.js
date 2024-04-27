@@ -15,29 +15,91 @@ class Line {
     }
 
     static doLinesIntersect(line1, line2) {
-        const { start: a, end: b } = line1;
-        const { start: c, end: d } = line2;
-
-        const orientation = (p, q, r) => {
-            const val = (q.y - p.y) * (r.x - q.x) - (q.x - p.x) * (r.y - q.y);
-            if (val === 0) return 0;
-            return (val > 0) ? 1 : 2;
-        };
-
-        const o1 = orientation(a, b, c);
-        const o2 = orientation(a, b, d);
-        const o3 = orientation(c, d, a);
-        const o4 = orientation(c, d, b);
-
-        if (o1 !== o2 && o3 !== o4) return true;
-
-        if (o1 === 0 && this.isOnSegment(a, c, b)) return true;
-        if (o2 === 0 && this.isOnSegment(a, d, b)) return true;
-        if (o3 === 0 && this.isOnSegment(c, a, d)) return true;
-        if (o4 === 0 && this.isOnSegment(c, b, d)) return true;
-
+        const eventQueue = [];
+        const segments = [line1, line2];
+    
+        // Populate the event queue with segment endpoints
+        segments.forEach(segment => {
+            eventQueue.push({ point: segment.start, segment, isLeftEndpoint: true });
+            eventQueue.push({ point: segment.end, segment, isLeftEndpoint: false });
+        });
+    
+        // Sort the event queue by x-coordinate
+        eventQueue.sort((a, b) => a.point.x - b.point.x);
+    
+        // Initialize a status structure (sorted by y-coordinate)
+        const status = [];
+    
+        // Process events
+        for (const event of eventQueue) {
+            if (event.isLeftEndpoint) {
+                // Insert segment into status structure
+                status.push(event.segment);
+                status.sort((a, b) => a.start.y - b.start.y); // Sort by y-coordinate
+    
+                // Check for intersection with segments above and below
+                const segmentIndex = status.indexOf(event.segment);
+                if (segmentIndex > 0) {
+                    // Check intersection with segment below
+                    if (this.doIntersect(status[segmentIndex - 1], event.segment))
+                        return true; // Intersection found
+                }
+                if (segmentIndex < status.length - 1) {
+                    // Check intersection with segment above
+                    if (this.doIntersect(status[segmentIndex + 1], event.segment))
+                        return true; // Intersection found
+                }
+            } else {
+                // Remove segment from status structure
+                const segmentIndex = status.indexOf(event.segment);
+                status.splice(segmentIndex, 1);
+                if (segmentIndex > 0 && segmentIndex < status.length) {
+                    // Check intersection between segments above and below
+                    if (this.doIntersect(status[segmentIndex - 1], status[segmentIndex]))
+                        return true; // Intersection found
+                }
+            }
+        }
+    
+        // No intersections found
         return false;
     }
+
+    static doIntersect(line1, line2) {
+        const { start: p1, end: q1 } = line1;
+        const { start: p2, end: q2 } = line2;
+    
+        // Helper function to calculate orientation
+        const orientation = (p, q, r) => {
+            const val = (q.y - p.y) * (r.x - q.x) - (q.x - p.x) * (r.y - q.y);
+            if (val === 0) return 0; // Collinear
+            return (val > 0) ? 1 : 2; // Clockwise or counterclockwise
+        };
+    
+        // Find orientations of the points
+        const orientation1 = orientation(p1, q1, p2);
+        const orientation2 = orientation(p1, q1, q2);
+        const orientation3 = orientation(p2, q2, p1);
+        const orientation4 = orientation(p2, q2, q1);
+    
+        // General case: segments intersect if orientations are different
+        if (orientation1 !== orientation2 && orientation3 !== orientation4) {
+            return true;
+        }
+    
+        // Special cases: segments are collinear and overlap
+        if (
+            orientation1 === 0 && this.isOnSegment(p1, p2, q1) ||
+            orientation2 === 0 && this.isOnSegment(p1, q2, q1) ||
+            orientation3 === 0 && this.isOnSegment(p2, p1, q2) ||
+            orientation4 === 0 && this.isOnSegment(p2, q1, q2)
+        ) {
+            return true;
+        }
+    
+        return false; // Segments do not intersect
+    }
+    
 
     static isOnSegment(p, q, r) {
         return q.x <= Math.max(p.x, r.x) && q.x >= Math.min(p.x, r.x) &&
@@ -164,26 +226,25 @@ class Game {
         console.log("removeIntersectingLine");
         console.log("currentline length"+this.currentLinePoints.length);
         if (this.currentLinePoints.length < 2) return;
-
+    
         const newLine = {
-            start: this.currentLinePoints[0], 
+            start: this.currentLinePoints[this.currentLinePoints.length - 2], 
             end: this.currentLinePoints[this.currentLinePoints.length - 1]
         };
-
+    
         for (let i = 0; i < this.lines.length; i++) {
             const line = this.lines[i];
             if (Line.doLinesIntersect(newLine, line)) {
                 console.log("removeIntersectingLine if Block");
+
                 this.lines.splice(i, 1); // Remove the existing line if it intersects
-                // this.currentLinePoints = []; // Clear the current line points
                 this.clearCanvas(); // Clear the canvas to remove the drawn line
                 this.drawDots(); // Redraw dots after clearing the canvas
-                //    this.stopDrawingLine();
-
                 return;
             }
         }
     }
+    
 
     checkForColorTouch(x, y) {
         const lastPoint = this.currentLinePoints[this.currentLinePoints.length - 2];
