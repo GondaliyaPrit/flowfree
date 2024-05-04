@@ -232,7 +232,7 @@ class Game {
 
     drawLine(start, end, color, points) {
         this.ctx.beginPath();
-        this.ctx.moveTo(points[0].x, points[0].y);
+        this.ctx.moveTo(points[0].x, points[3].y);
         for (let i = 1; i < points.length; i++) {
             this.ctx.lineTo(points[i].x, points[i].y);
         }
