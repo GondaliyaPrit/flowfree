@@ -167,7 +167,7 @@ class Game {
     
         const newLine = {
             start: this.currentLinePoints[0], 
-            end: this.currentLinePoints[0]
+            end: this.currentLinePoints[this.currentLinePoints.length - 1]
         };
 
         //this.currentLinePoints.length - 1
