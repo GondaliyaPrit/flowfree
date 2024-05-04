@@ -161,8 +161,7 @@ class Game {
     }
 
     removeIntersectingLine() {
-        console.log("removeIntersectingLine");
-        console.log("currentline length"+this.currentLinePoints.length);
+        
         if (this.currentLinePoints.length < 2) return;
     
         const newLine = {
@@ -233,6 +232,8 @@ class Game {
     drawLine(start, end, color, points) {
         this.ctx.beginPath();
         this.ctx.moveTo(points[0].x, points[0].y);
+        console.log("drawline X--->"+points[0].x);
+        console.log("drawline Y--->"+points[0].y);
         for (let i = 1; i < points.length; i++) {
             this.ctx.lineTo(points[i].x, points[i].y);
         }
