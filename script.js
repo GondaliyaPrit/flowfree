@@ -192,7 +192,7 @@ class Game {
         for (const dot of this.dots) {
             if (dot.color !== this.selectedDotColor && this.isPointInsideDot({ x, y }, dot)) {
                 // Remove the current line
-                this.lines.pop();
+                //this.lines.pop();
                 this.currentLinePoints = []; // Clear the current line points
                // this.stopDrawingLine();
                 // Redraw the dots and lines
