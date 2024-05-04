@@ -235,8 +235,11 @@ class Game {
         console.log("drawline X--->"+points[0].x);
         console.log("drawline Y--->"+points[0].y);
 
-        for (let i = 1; i < points.length; i++) {
-            this.ctx.lineTo(points[i].x, points[i+2].y);
+        for (let i = 1; i < points.length-2; i++) {
+            this.ctx.lineTo(points[i].x, points[i].y);
+            console.log("drawline X--->"+points[i].x);
+        console.log("drawline Y--->"+points[i].y);
+
         }
         this.ctx.strokeStyle = color;
         this.ctx.lineWidth = this.lineWidth;
