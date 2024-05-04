@@ -173,7 +173,6 @@ class Game {
         for (let i = 0; i < this.lines.length; i++) {
             const line = this.lines[i];
             if (Line.doLinesIntersect(newLine, line)) {
-                this.currentLinePoints.pop({ x, y });
                 console.log("removeIntersectingLine if Block");
                 this.lines.splice(i, 1); // Remove the existing line if it intersects
                 this.clearCanvas(); // Clear the canvas to remove the drawn line
