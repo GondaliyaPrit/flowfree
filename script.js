@@ -212,7 +212,7 @@ class Game {
         this.lines.forEach(line => this.drawLine(line.start, line.end, line.color, line.points));
         if (this.isDrawing && this.currentLinePoints.length > 1) {
             this.ctx.beginPath();
-            this.ctx.moveTo(this.currentLinePoints[0].x, this.currentLinePoints[3].y);
+            this.ctx.moveTo(this.currentLinePoints[0].x, this.currentLinePoints[0].y);
             for (let i = 1; i < this.currentLinePoints.length; i++) {
                 this.ctx.lineTo(this.currentLinePoints[i].x, this.currentLinePoints[i].y);
             }
@@ -232,7 +232,7 @@ class Game {
 
     drawLine(start, end, color, points) {
         this.ctx.beginPath();
-        this.ctx.moveTo(points[0].x, points[3].y);
+        this.ctx.moveTo(points[0].x, points[0].y);
         for (let i = 1; i < points.length; i++) {
             this.ctx.lineTo(points[i].x, points[i].y);
         }
