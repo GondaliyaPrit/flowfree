@@ -194,7 +194,7 @@ class Game {
                 // Remove the current line
                 this.lines.pop();
                 this.currentLinePoints = []; // Clear the current line points
-                this.stopDrawingLine();
+               // this.stopDrawingLine();
                 // Redraw the dots and lines
                 this.drawDots();
                 // this.drawFreeformLines();
