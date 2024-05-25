@@ -18,22 +18,35 @@ class Line {
         const { start: a, end: b } = line1;
         const { start: c, end: d } = line2;
 
+        // Helper function to compute the orientation based on the cross product
         const cross = (p, q, r) => (q.y - p.y) * (r.x - q.x) - (q.x - p.x) * (r.y - q.y);
 
+        // Compute orientations needed for the general and special cases
         const o1 = cross(a, b, c);
         const o2 = cross(a, b, d);
         const o3 = cross(c, d, a);
         const o4 = cross(c, d, b);
 
+        // Check for collinear points
         if (o1 === 0 && o2 === 0 && o3 === 0 && o4 === 0) {
+            // Check if segments overlap
             const onSegment = (p, q, r) => {
                 return q.x <= Math.max(p.x, r.x) && q.x >= Math.min(p.x, r.x) &&
                     q.y <= Math.max(p.y, r.y) && q.y >= Math.min(p.y, r.y);
             };
-            return onSegment(a, c, b) || onSegment(a, d, b) || onSegment(c, a, d) || onSegment(c, b, d);
+            if (onSegment(a, c, b) || onSegment(a, d, b) || onSegment(c, a, d) || onSegment(c, b, d)) {
+                return true;
+            }
+            return false;
         }
 
-        return (o1 > 0 && o2 < 0 || o1 < 0 && o2 > 0) && (o3 > 0 && o4 < 0 || o3 < 0 && o4 > 0);
+        // General case check if lines (segments) intersect
+        if ((o1 > 0 && o2 < 0 || o1 < 0 && o2 > 0) && (o3 > 0 && o4 < 0 || o3 < 0 && o4 > 0)) {
+            return true;
+        }
+
+        // If none of the cases apply, return false
+        return false;
     }
 
     static isOnSegment(p, q, r) {
@@ -60,6 +73,17 @@ class Game {
         this.initCanvas();
         this.initEventListeners();
         this.generateDots();
+
+
+    }
+
+    checkForConnectedDots() {
+        // Iterate through all lines to see if there are any connecting two dots of the same color
+        this.lines.forEach(line => {
+            if (this.areSameColor(line.start, line.end)) {
+                console.log("Dot connected between (" + line.start.x + ", " + line.start.y + ") and (" + line.end.x + ", " + line.end.y + ")");
+            }
+        });
     }
 
     initCanvas() {
@@ -68,18 +92,20 @@ class Game {
     }
 
     initEventListeners() {
+        // Mouse event listeners
         this.canvas.addEventListener('mousedown', e => this.handlePointerDown({ x: e.clientX - this.canvas.offsetLeft, y: e.clientY - this.canvas.offsetTop }));
         this.canvas.addEventListener('mousemove', e => this.handlePointerMove({ x: e.clientX - this.canvas.offsetLeft, y: e.clientY - this.canvas.offsetTop }));
         this.canvas.addEventListener('mouseup', () => this.handlePointerUp());
         this.canvas.addEventListener('mouseleave', () => this.handlePointerUp());
 
+        // Touch event listeners
         this.canvas.addEventListener('touchstart', e => {
-            e.preventDefault();
-            this.handlePointerDown({ x: e.touches[0].clientX - this.canvas.offsetLeft, y: e.touches[0].clientY - this.canvas.offsetTop });
+            e.preventDefault(); // Prevent scrolling on touch devices
+            this.handlePointerDown({ x: e.touches[0].clientX - this.canvas.offsetLeft, y: e.touches[0].clientY - this.canvas.offsetTop })
         });
         this.canvas.addEventListener('touchmove', e => {
-            e.preventDefault();
-            this.handlePointerMove({ x: e.touches[0].clientX - this.canvas.offsetLeft, y: e.touches[0].clientY - this.canvas.offsetTop });
+            e.preventDefault(); // Prevent scrolling on touch devices
+            this.handlePointerMove({ x: e.touches[0].clientX - this.canvas.offsetLeft, y: e.touches[0].clientY - this.canvas.offsetTop })
         });
         this.canvas.addEventListener('touchend', () => this.handlePointerUp());
     }
@@ -90,6 +116,7 @@ class Game {
         const clickedDot = this.dots.find(dot => this.isPointInsideDot({ x, y }, dot));
 
         if (clickedDot) {
+            console.log("clickedDot")
             this.selectedDot = clickedDot;
             this.selectedDotColor = clickedDot.color;
             this.isDrawing = true;
@@ -98,9 +125,12 @@ class Game {
             this.linePoints.push({ x, y });
             this.highlightSameColorDots(this.selectedDot.color);
 
+            // Check if the selected dot has a connected line, and remove it
             this.removeConnectedLine(clickedDot);
         }
     }
+
+
 
     removeConnectedLine(dot) {
         const connectedLineIndex = this.lines.findIndex(line =>
@@ -122,6 +152,9 @@ class Game {
         }
     }
 
+
+
+
     handlePointerUp() {
         if (this.isDrawing) {
             this.isDrawing = false;
@@ -138,6 +171,7 @@ class Game {
                         this.lines.splice(existingLineIndex, 1);
                     }
                     this.addLine(startDot, endDot, this.selectedDotColor, this.currentLinePoints);
+                    this.checkForConnectedDots(); // Check connections after adding a line
                 }
             }
 
@@ -145,39 +179,68 @@ class Game {
             this.clearCanvas();
             this.drawDots();
             this.drawFreeformLines();
-            if (this.selectedDot) {
-                this.highlightSameColorDots(this.selectedDot.color);
-            }
+            this.highlightSameColorDots(this.selectedDot.color);
         }
     }
 
+
     removeIntersectingLine() {
-        if (this.currentLinePoints.length < 2) return;
+        console.log("currentLinePoints---->" + this.currentLinePoints.length);
+        if (this.currentLinePoints.length < 10) return;
+
+        console.log("newline Start Point---->" + JSON.stringify(this.currentLinePoints[this.currentLinePoints.length - 2]));
+        console.log("newline end Point---->" + JSON.stringify(this.currentLinePoints[this.currentLinePoints.length - 1]));
 
         const newLine = {
             start: this.currentLinePoints[this.currentLinePoints.length - 2],
             end: this.currentLinePoints[this.currentLinePoints.length - 1]
         };
 
+
+        //this.currentLinePoints.length - 1
+
+        console.log("lineslength---->" + this.lines.length);
         for (let i = 0; i < this.lines.length; i++) {
             const line = this.lines[i];
             if (Line.doLinesIntersect(newLine, line)) {
-                this.lines.splice(i, 1);
-                this.clearCanvas();
-                this.drawDots();
-                this.drawFreeformLines();
+                console.log("removeIntersectingLine if Block");
+                this.lines.splice(i, 1); // Remove the existing line if it intersects
+                this.clearCanvas(); // Clear the canvas to remove the drawn line
+                this.drawDots(); // Redraw dots after clearing the canvas
                 return;
             }
         }
     }
 
+
     checkForColorTouch(x, y) {
+        const lastPoint = this.currentLinePoints[this.currentLinePoints.length - 2];
+        const startPoint = this.linePoints[0];
+
         for (const dot of this.dots) {
-            if (this.isPointInsideDot({ x, y }, dot) && dot.color !== this.selectedDotColor) {
-                this.stopDrawingLine();
+            if (dot.color !== this.selectedDotColor && this.isPointInsideDot({ x, y }, dot)) {
+                console.log("colorrfsedfsa");
+                // Remove the current line
+                //  this.lines.pop();
+                this.currentLinePoints = []; // Clear the current line points
+                //this.stopDrawingLine();
+                // Redraw the dots and lines
+                this.drawDots();
+                // this.drawFreeformLines();
                 return;
             }
+            else if (dot.color == this.selectedDotColor && this.isPointInsideDot({ x, y }, dot)) {
+                console.log("dsdhdgshdb");
+                // this.currentLinePoints = []; // Clear the current line points
+
+                // Redraw the dots and lines
+                this.drawDots();
+                this.stopLine();
+                return;
+
+            }
         }
+
     }
 
     drawDots() {
@@ -211,8 +274,11 @@ class Game {
     drawLine(start, end, color, points) {
         this.ctx.beginPath();
         this.ctx.moveTo(points[0].x, points[0].y);
-        for (let i = 1; i < points.length; i++) {
+
+        for (let i = 1; i < points.length - 2; i++) {
             this.ctx.lineTo(points[i].x, points[i].y);
+
+
         }
         this.ctx.strokeStyle = color;
         this.ctx.lineWidth = this.lineWidth;
@@ -223,50 +289,158 @@ class Game {
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
     }
 
-    generateDots() {
-        const colors = this.dotColors;
-        const numColors = colors.length;
-        const dotCount = Math.floor(this.canvas.width * this.canvas.height / 25000);
+    addDot(x, y, color) {
+        this.dots.push(new Dot(x, y, color));
+    }
 
-        for (let i = 0; i < dotCount; i++) {
-            const x = Math.random() * (this.canvas.width - 2 * this.dotRadius) + this.dotRadius;
-            const y = Math.random() * (this.canvas.height - 2 * this.dotRadius) + this.dotRadius;
-            const color = colors[Math.floor(Math.random() * numColors)];
-            this.dots.push(new Dot(x, y, color));
+    addLine(start, end, color, points) {
+        const existingLineIndex = this.lines.findIndex(line =>
+            (line.start === start && line.end === end) ||
+            (line.start === end && line.end === start)
+        );
+
+        if (existingLineIndex !== -1) {
+            this.lines.splice(existingLineIndex, 1); // Remove the existing line
         }
 
-        this.drawDots();
-    }
-
-    highlightSameColorDots(color) {
-        this.dots.forEach(dot => {
-            if (dot.color === color) {
-                this.drawDot(dot.x, dot.y, dot.color);
-            }
-        });
-    }
-
-    isPointInsideDot(point, dot) {
-        const distance = Math.sqrt((point.x - dot.x) ** 2 + (point.y - dot.y) ** 2);
-        return distance <= this.dotRadius;
+        this.lines.push(new Line(start, end, color, points)); // Add the new line
     }
 
     areSameColor(dot1, dot2) {
         return dot1.color === dot2.color;
     }
 
-    addLine(start, end, color, points) {
-        this.lines.push(new Line(start, end, color, points));
+    generateRandomCoordinates() {
+        const minX = this.canvas.width * 0.1; // 10% of canvas width from left edge
+        const minY = this.canvas.height * 0.1; // 10% of canvas height from top edge
+        const maxX = this.canvas.width * 0.9; // 10% of canvas width from right edge
+        const maxY = this.canvas.height * 0.9; // 10% of canvas height from bottom edge
+
+        const x = Math.random() * (maxX - minX) + minX;
+        const y = Math.random() * (maxY - minY) + minY;
+
+        return { x, y };
     }
+
+    highlightSameColorDots(color) {
+        this.dots.forEach(dot => {
+            if (dot.color === color) {
+                this.drawHighlightedDot(dot.x, dot.y, dot.color);
+            }
+        });
+    }
+
+    drawHighlightedDot(x, y, color) {
+
+        this.ctx.beginPath();
+        this.ctx.arc(x, y, this.dotRadius + 2, 0, Math.PI * 2);
+        this.ctx.strokeStyle = color;
+        this.ctx.lineWidth = 2;
+        this.ctx.stroke();
+
+    }
+
+    isPointInsideDot(point, dot) {
+        const dx = point.x - dot.x;
+        const dy = point.y - dot.y;
+        return dx * dx + dy * dy <= this.dotRadius * this.dotRadius;
+    }
+
+    generateDots() {
+        const dotsPerColor = {}; // Track the number of dots generated for each color
+        const minDistance = 10 * this.dotRadius; // Minimum distance between dots
+
+        this.dots = []; // Reset the dots array
+
+        for (let i = 0; i < 5; i++) {
+            let r, g, b;
+            do {
+                // Generate random RGB values
+                r = Math.floor(Math.random() * 256);
+                g = Math.floor(Math.random() * 256);
+                b = Math.floor(Math.random() * 256);
+            } while (!this.isColorFarFromOthers(r, g, b)); // Check if the generated color is visually distinct
+
+            const color = `rgb(${r}, ${g}, ${b})`; // Generate color string
+
+            dotsPerColor[color] = dotsPerColor[color] || 0;
+
+            if (dotsPerColor[color] < 2) {
+                let dot1, dot2;
+                do {
+                    dot1 = this.generateRandomCoordinates();
+                } while (this.isDotTooClose(dot1, minDistance)); // Check if the generated dot is too close to existing dots
+
+                do {
+                    dot2 = this.generateRandomCoordinates();
+                } while (this.isDotTooClose(dot2, minDistance) || this.areCoordinatesEqual(dot1, dot2)); // Check if the generated dot is too close to existing dots and not equal to the first dot
+
+                this.addDot(dot1.x, dot1.y, color);
+                this.addDot(dot2.x, dot2.y, color);
+
+                dotsPerColor[color] += 2;
+            }
+        }
+
+        this.drawDots();
+    }
+
+    isDotTooClose(newDot, minDistance) {
+        // Check if the new dot is too close to any existing dot
+        for (const dot of this.dots) {
+            const distance = Math.sqrt((newDot.x - dot.x) ** 2 + (newDot.y - dot.y) ** 2);
+            if (distance < minDistance) {
+                return true; // Dot is too close
+            }
+        }
+        return false; // Dot is not too close
+    }
+
+    areCoordinatesEqual(coord1, coord2) {
+        // Check if the coordinates of two dots are equal
+        return coord1.x === coord2.x && coord1.y === coord2.y;
+    }
+
+
+    isColorFarFromOthers(r, g, b) {
+        // Minimum allowed separation between RGB components
+        const minSeparation = 50;
+
+        // Check if the generated color is far from existing dots in terms of RGB components
+        for (const dot of this.dots) {
+            const existingColor = dot.color.substring(4, dot.color.length - 1).split(',');
+            const existingR = parseInt(existingColor[0].trim());
+            const existingG = parseInt(existingColor[1].trim());
+            const existingB = parseInt(existingColor[2].trim());
+
+            const separation = Math.sqrt((r - existingR) ** 2 + (g - existingG) ** 2 + (b - existingB) ** 2);
+            if (separation < minSeparation) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+
+
 
     stopDrawingLine() {
         this.isDrawing = false;
-        this.linePoints = [];
         this.currentLinePoints = [];
         this.clearCanvas();
         this.drawDots();
         this.drawFreeformLines();
+        if (this.selectedDot) {
+            this.highlightSameColorDots(this.selectedDot.color);
+        }
     }
+
+    stopLine() {
+        this.isDrawing = true;
+    }
+
+
 }
 
-const game = new Game('gameCanvas', 10, ['red', 'blue', 'green', 'yellow'], 5);
+const game = new Game('gameCanvas', 15, ['#FF0000', '#00FF00', '#0000FF'], 10);
