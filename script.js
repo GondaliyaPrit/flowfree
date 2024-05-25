@@ -186,14 +186,14 @@ class Game {
 
     removeIntersectingLine() {
         console.log("currentLinePoints---->" + this.currentLinePoints.length);
-        if (this.start.length < 10) return;
+        if (this.currentLinePoints.length < 10) return;
 
-        console.log("newline Start Point---->" + JSON.stringify(this.start[this.start.x.length - 2]));
-        console.log("newline end Point---->" + JSON.stringify(this.end[this.end.x.length - 1]));
+        console.log("newline Start Point---->" + JSON.stringify(this.currentLinePoints[this.currentLinePoints.length - 2]));
+        console.log("newline end Point---->" + JSON.stringify(this.currentLinePoints[this.currentLinePoints.length - 1]));
 
         const newLine = {
-            start: this.start[this.start.length - 2],
-            end: this.end[this.end.length - 1]
+            start: this.currentLinePoints[this.currentLinePoints.length - 2],
+            end: this.currentLinePoints[this.currentLinePoints.length - 1]
         };
 
 
